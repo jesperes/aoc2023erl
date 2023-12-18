@@ -11,26 +11,20 @@ otp_version() ->
                                   erlang:system_info(otp_release), "OTP_VERSION"])),
   string:trim(binary_to_list(Version)).
 
+
+
 module(Day) ->
   binary_to_atom(iolist_to_binary(io_lib:format("day~2..0w", [Day]))).
 
 main(_) ->
   io:setopts([{encoding, unicode}]),
+  {ok, _} = application:ensure_all_started([inets, ssl]),
   io:format("Erlang version: ~s~n", [otp_version()]),
   lists:foreach(
     fun(D) ->
         Mod = module(D),
-        try
-          case answer(Mod) of
-            tbd ->
-              io:format("~-10s~10s~n", [Mod, "--"]);
-            Expected ->
-              {Time, Solution} = run(Mod, Expected),
-              io:format("~-10s~10w μs   ~w~n", [Mod, Time, Solution])
-          end
-        catch _:undef ->
-            io:format("~-10s~10s~n", [Mod, "--"])
-        end
+        {Time, Solution} = run(Mod, undef),
+        io:format("~-10s~10w μs   ~w~n", [Mod, Time, Solution])
     end, lists:seq(1, 25)).
 
 run(Module, Expected) ->
@@ -47,18 +41,3 @@ run(Module, Expected, MaxIter, MaxUsecs, AccTime, _Val, N) ->
   Descr = io_lib:format("Incorrect solution result for ~s", [Module]),
   ?assertEqual(Expected, Solution, Descr),
   run(Module, Expected, MaxIter - 1, MaxUsecs - Time, AccTime + Time, Solution, N + 1).
-
-answer(day01) ->
-  {54390, 54277};
-answer(day02) ->
-  {2061,72596};
-answer(day03) ->
-  {527369, 73074886};
-answer(day04) ->
-  {19855, 10378710};
-answer(day06) ->
-  {303600, 23654842};
-answer(day07) ->
-  {248836197,251195607};
-answer(_) ->
-  tbd.

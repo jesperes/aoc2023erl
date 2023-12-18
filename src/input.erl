@@ -1,26 +1,53 @@
 -module(input).
 
--export([get/1, do_get/1]).
--compile({parse_transform, ct_expand}).
+-export([get/1, solution/1]).
+
+aoc_session_token() ->
+  Home = os:getenv("HOME"),
+  {ok, SessionToken} = file:read_file(filename:join(Home, ".adventofcode.session")),
+  string:trim(SessionToken).
 
 input_filename(Day) ->
-  io_lib:format("priv/input~2..0w.txt", [Day]).
+  Home = os:getenv("HOME"),
+  filename:join([Home, ".cache", "aoc-data", "2023",
+                 io_lib:format("input~w.txt", [Day])]).
 
--spec do_get(Day :: integer()) -> binary().
-do_get(Day) ->
-  Filename = input_filename(Day),
-  case file:read_file(Filename) of
-    {ok, Binary} -> Binary;
-    {error, enoent} ->
-      io:format("--- could not find input file ~s~n", [Filename]),
-      <<>>
+puzzle_filename(Day) ->
+  Home = os:getenv("HOME"),
+  filename:join([Home, ".cache", "aoc-data", "2023",
+                 io_lib:format("puzzle~w.txt", [Day])]).
+
+read_cached_file_or_fetch_from_url(Filename, Url) ->
+  case filelib:is_file(Filename) of
+    true ->
+      file:read_file(Filename);
+    false ->
+      CookieHeader = io_lib:format("session=~s", [aoc_session_token()]),
+      case httpc:request(get, {Url, [{"cookie", CookieHeader}]}, [], [{body_format, binary}]) of
+        {ok, {{_, 200, _}, _, Body}} ->
+          file:write_file(Filename, Body),
+          {ok, Body};
+        {ok, {{_, 404, _}, _, _}} ->
+          {error, not_found}
+      end
   end.
 
+get(Day) ->
+  Filename = input_filename(Day),
+  Url = io_lib:format("https://adventofcode.com/~w/day/~w/input", [2023, Day]),
+  read_cached_file_or_fetch_from_url(Filename, Url).
 
-get(1) -> ct_expand:term(do_get(1));
-get(2) -> ct_expand:term(do_get(2));
-get(3) -> ct_expand:term(do_get(3));
-get(4) -> ct_expand:term(do_get(4));
-get(5) -> ct_expand:term(do_get(5));
-get(6) -> ct_expand:term(do_get(6));
-get(7) -> ct_expand:term(do_get(7)).
+puzzle_descr(Day) ->
+  Filename = puzzle_filename(Day),
+  Url = io_lib:format("https://adventofcode.com/~w/day/~w", [2023, Day]),
+  read_cached_file_or_fetch_from_url(Filename, Url).
+
+solution(Day) ->
+  case puzzle_descr(Day) of
+    {ok, Html} ->
+      RE = "Your puzzle answer was <code>([^<]+)</code>",
+      {match, [[P1], [P2]]} = re:run(Html, RE, [global, {capture, all_but_first, binary}]),
+      {P1, P2};
+    Error ->
+      Error
+  end.
