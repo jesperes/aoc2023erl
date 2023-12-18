@@ -7,21 +7,22 @@ aoc_session_token() ->
   {ok, SessionToken} = file:read_file(filename:join(Home, ".adventofcode.session")),
   string:trim(SessionToken).
 
-input_filename(Day) ->
+cache_file(Fmt, Args) ->
   Home = os:getenv("HOME"),
-  filename:join([Home, ".cache", "aoc-data", "2023",
-                 io_lib:format("input~w.txt", [Day])]).
+  filename:join([Home, ".cache", "aoc-data", "2023", io_lib:format(Fmt, Args)]).
+
+input_filename(Day) ->
+  cache_file("input~w.txt", [Day]).
 
 puzzle_filename(Day) ->
-  Home = os:getenv("HOME"),
-  filename:join([Home, ".cache", "aoc-data", "2023",
-                 io_lib:format("puzzle~w.txt", [Day])]).
+  cache_file("puzzle~w.txt", [Day]).
 
 read_cached_file_or_fetch_from_url(Filename, Url) ->
   case filelib:is_file(Filename) of
     true ->
       file:read_file(Filename);
     false ->
+      io:format("~tc Fetching ~s -> ~s~n", [16#1f385, Url, Filename]),
       CookieHeader = io_lib:format("session=~s", [aoc_session_token()]),
       case httpc:request(get, {Url, [{"cookie", CookieHeader}]}, [], [{body_format, binary}]) of
         {ok, {{_, 200, _}, _, Body}} ->
