@@ -1,13 +1,6 @@
 -module(day06).
 
--export([ solve/0
-        , solve_p2/2
-        ]).
-
--include_lib("eunit/include/eunit.hrl").
-
-solve() ->
-  solve(input:get(6)).
+-export([solve/1]).
 
 solve(Bin) ->
   [T, D] = lists:map(fun string:trim/1, binary:split(Bin, <<"\n">>)),
@@ -50,10 +43,3 @@ concat_bins_to_int(Bins) ->
     lists:foldl(fun(B, Acc) ->
                     <<B/binary, Acc/binary>>
                 end, <<>>, Bins)).
-
--ifdef(TEST).
-
-solve_test() ->
-  ?assertEqual({303600, 23654842}, ?MODULE:solve()).
-
--endif.

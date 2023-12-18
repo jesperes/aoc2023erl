@@ -48,7 +48,11 @@ solution(Day) ->
     {ok, Html} ->
       RE = "Your puzzle answer was <code>([^<]+)</code>",
       {match, [[P1], [P2]]} = re:run(Html, RE, [global, {capture, all_but_first, binary}]),
-      {P1, P2};
+      {convert_to_binary(P1), convert_to_binary(P2)};
     Error ->
       Error
   end.
+
+%% todo
+convert_to_binary(P) ->
+  binary_to_integer(P).

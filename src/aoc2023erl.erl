@@ -11,33 +11,47 @@ otp_version() ->
                                   erlang:system_info(otp_release), "OTP_VERSION"])),
   string:trim(binary_to_list(Version)).
 
-
-
 module(Day) ->
   binary_to_atom(iolist_to_binary(io_lib:format("day~2..0w", [Day]))).
-
 main(_) ->
   io:setopts([{encoding, unicode}]),
   {ok, _} = application:ensure_all_started([inets, ssl]),
   io:format("Erlang version: ~s~n", [otp_version()]),
+  {_, _, Today} = erlang:date(),
   lists:foreach(
-    fun(D) ->
+    fun(D) when D > Today ->
+        %% Not released yet, ignore
+        ok;
+       (D) ->
         Mod = module(D),
-        {Time, Solution} = run(Mod, undef),
-        io:format("~-10s~10w μs   ~w~n", [Mod, Time, Solution])
+        try
+          {ok, Input} = input:get(D),
+          Expected = input:solution(D),
+          {Time, Solution} = run(Mod, Input),
+
+          case Expected == Solution of
+            true ->
+              io:format("~-10s~10w μs   ~tc ~0p~n", [Mod, Time, 16#2713, Solution]);
+            false ->
+              io:format("~-10s~10w μs   ~tc ~0p (expected ~0p)~n", [Mod, Time, 16#2717, Solution, Expected])
+          end
+        catch
+          _:undef ->
+            io:format("~-10s not implemented~n", [Mod]);
+          _Class:Reason ->
+            io:format("~-10s                ~tc EXCEPTION: ~0p~n", [Mod, 16#2717, Reason])
+        end
     end, lists:seq(1, 25)).
 
-run(Module, Expected) ->
+run(Module, Input) ->
   MaxIter = 1000,
   MaxSecs = 5,
-  run(Module, Expected, MaxIter, erlang:convert_time_unit(MaxSecs, second, microsecond), 0, undef, 0).
+  ItersRemaining = MaxIter,
+  TimeRemaining = erlang:convert_time_unit(MaxSecs, second, microsecond),
+  run(Module, Input, ItersRemaining, TimeRemaining, 0, 0, undef).
 
-run(_Module, _Expected, Iter, _, Time, Val, N) when Iter =< 0 ->
-  {erlang:trunc(Time / N), Val};
-run(_Module, _Expected, _, Usecs, Time, Val, N) when Usecs =< 0 ->
-  {erlang:trunc(Time / N), Val};
-run(Module, Expected, MaxIter, MaxUsecs, AccTime, _Val, N) ->
-  {Time, Solution} = timer:tc(fun() -> Module:solve() end),
-  Descr = io_lib:format("Incorrect solution result for ~s", [Module]),
-  ?assertEqual(Expected, Solution, Descr),
-  run(Module, Expected, MaxIter - 1, MaxUsecs - Time, AccTime + Time, Solution, N + 1).
+run(_Module, _Input, ItersRemaining, TimeRemaining, AccTime, NumIters, Solution) when ItersRemaining =< 0 orelse TimeRemaining =< 0 ->
+  {erlang:trunc(AccTime / NumIters), Solution};
+run(Module, Input, ItersRemaining, TimeRemaining, AccTime, NumIters, _) ->
+  {Time, Solution} = timer:tc(fun() -> Module:solve(Input) end),
+  run(Module, Input, ItersRemaining - 1, TimeRemaining - Time, AccTime + Time, NumIters + 1, Solution).

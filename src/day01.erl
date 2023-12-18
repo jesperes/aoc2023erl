@@ -1,14 +1,8 @@
 -module(day01).
 
--export([solve/0]).
-
--include_lib("eunit/include/eunit.hrl").
+-export([solve/1]).
 
 -define(is_digit(X), ((X >= $0) andalso (X =< $9))).
-
-solve() ->
-  Bin = input:get(1),
-  solve(Bin).
 
 solve(Bin) ->
   Lines = binary:split(Bin, <<"\n">>, [global]),
@@ -49,10 +43,3 @@ get_first_last(part2, Bin, First, Last) ->
   end;
 get_first_last(Part, <<_, Rest/binary>>, First, Last) ->
   get_first_last(Part, Rest, First, Last).
-
--ifdef(TEST).
-
-solve_test() ->
-  ?assertEqual({54390, 54277}, ?MODULE:solve()).
-
--endif.

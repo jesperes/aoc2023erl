@@ -1,11 +1,6 @@
 -module(day03).
 
--export([solve/0]).
-
--include_lib("eunit/include/eunit.hrl").
-
-solve() ->
-  solve(input:get(3)).
+-export([solve/1]).
 
 solve(Bin) ->
   {W, _} = binary:match(Bin, <<"\n">>),
@@ -71,23 +66,3 @@ find_adj_symbols({Start, Len} = PosLen, W, Bin, Map) ->
               end
           end, Map0, Adjacents)
     end, Map, lists:seq(Start, Start + Len - 1)).
-
--ifdef(TEST).
-
-ex1_test() ->
-  Bin = <<"467..114..\n",
-          "...*......\n",
-          "..35..633.\n",
-          "......#...\n",
-          "617*......\n",
-          ".....+.58.\n",
-          "..592.....\n",
-          "......755.\n",
-          "...$.*....\n",
-          ".664.598..\n">>,
-  solve(Bin).
-
-solve_test() ->
-  ?assertEqual({527369, 73074886}, ?MODULE:solve()).
-
--endif.

@@ -1,11 +1,6 @@
 -module(day04).
 
--export([solve/0]).
-
--include_lib("eunit/include/eunit.hrl").
-
-solve() ->
-  solve(input:get(4)).
+-export([solve/1]).
 
 solve(Bin) ->
   Lines = binary:split(Bin, <<"\n">>, [global]),
@@ -44,11 +39,3 @@ split_nums(Bin) ->
                    byte_size(X) > 0
                end,
                binary:split(Bin, <<" ">>, [global])).
-
-
--ifdef(TEST).
-
-solve_test() ->
-  ?assertEqual({19855, 10378710}, ?MODULE:solve()).
-
--endif.

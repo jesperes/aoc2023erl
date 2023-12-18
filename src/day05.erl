@@ -1,11 +1,8 @@
 -module(day05).
 
--export([solve/0]).
+-export([solve/1]).
 
 -include_lib("eunit/include/eunit.hrl").
-
-solve() ->
-  solve(input:get(5)).
 
 solve(Bin) ->
   [<<"seeds: ", Seeds/binary>>|Maps] = binary:split(Bin, <<"\n\n">>, [global]),
@@ -81,8 +78,8 @@ transform2(SeedRanges, [], Acc) ->
   SeedRanges ++ Acc;
 transform2([{Start, Len} = SeedRange|SeedRangesRest] = SeedRanges,
            [{XDest, XStart, XLen} = XRange|TransformRangesRest] = TransformRanges, Acc) ->
-  ?debugVal({Start, Len}),
-  ?debugVal({XStart, XLen}),
+  %%?debugVal({Start, Len}),
+  %%?debugVal({XStart, XLen}),
   if
     %% Case 1: seed range is smaller and disjoint
     Start + Len =< XStart ->
@@ -91,13 +88,13 @@ transform2([{Start, Len} = SeedRange|SeedRangesRest] = SeedRanges,
 
     %% Case 2: x-range is smaller and disjoint
     XStart + Len =< Start ->
-      ?debugVal(case_2),
+  %%    ?debugVal(case_2),
       transform2(SeedRanges, TransformRangesRest, Acc);
 
     %% Case 3: seed range is smaller, and partially overlaps with the
     %% lower part of the x-range.
     Start < XStart andalso Start + Len =< XStart + XLen ->
-      ?debugVal(case_3),
+%%      ?debugVal(case_3),
       SplitLen = XStart - Start,
       Left = {Start, SplitLen},
       Right = {XDest + SplitLen, Len - SplitLen},
@@ -114,86 +111,3 @@ transform2([{Start, Len} = SeedRange|SeedRangesRest] = SeedRanges,
     true ->
       throw({no_rule, SeedRange, XRange})
   end.
-
--ifdef(TEST).
-
-transform2_test_() ->
-  [ {"Test case 1", ?_assertEqual([{1, 5}], transform2([{1, 5}], [{1000, 7, 5}]))}
-  , {"Test case 2", ?_assertEqual([{7, 5}], transform2([{7, 5}], [{1000, 1, 5}]))}
-  , {"Test case 3", ?_assertEqual([{1, 2}, {1002, 3}], transform2([{1, 5}], [{1000, 3, 5}]))}
-  , {"Test case 4", ?_assertEqual([{1001, 3}], transform2([{3, 3}], [{1000, 2, 5}]))}
-  ].
-  %% Ranges = [{45, 77, 23},
-  %%           {81, 45, 19},
-  %%           {68, 64, 13}],
-  %% [{"Case 1", ?_assertEqual([], transform2([{82, 1}], Ranges))}].
-
-%% transform2_test_() ->
-%%   Range = {100, 3, 3},
-%%   [ {"Case 1", ?_assertEqual([{0, 2}], transform2_one_range({0, 2}, Range))}
-%%   , {"Case 2", ?_assertEqual([{2, 1}, {100, 1}], transform2_one_range({2, 2}, Range))}
-%%   , {"Case 3", ?_assertEqual([{101, 1}], transform2_one_range({4, 1}, Range))}
-%%   , {"Case 4", ?_assertEqual([{102, 1}, {6, 1}], transform2_one_range({5, 2}, Range))}
-%%   , {"Case 5", ?_assertEqual([{7, 2}], transform2_one_range({7, 2}, Range))}
-%%   , {"Case 6", ?_assertEqual([{2, 1}, {100, 3}, {6, 1}], transform2_one_range({2, 5}, Range))}
-%%   , {"Misc 7", ?_assertEqual([{2, 1}, {100, 3}], transform2_one_range({2, 4}, Range))}
-%%   , {"Misc 8", ?_assertEqual([{6, 3}], transform2_one_range({6, 3}, Range))}
-%%   , {"Misc 9", ?_assertEqual([{101, 2}], transform2_one_range({4, 2}, Range))}
-%%   , {"Misc 10", ?_assertEqual([{0, 3}, {100, 3}], transform2_one_range({0, 6}, Range))}
-%%   ].
-
-%% transform2_errors_test_() ->
-%%   Range = {100, 3, 3},
-%%   [ {"Error 1", ?_assertEqual([{56, 4}, {97, 2}], transform2_one_range({93, 6}, {56, 93, 4}))}
-%%   , {"Error 2", ?_assertEqual([{100, 3}], transform2_one_range({3, 3}, Range))}
-%%   ].
-
-%% example() ->
-%%   <<"seeds: 79 14 55 13\n",
-%%     "\n",
-%%     "seed-to-soil map:\n",
-%%     "50 98 2\n",
-%%     "52 50 48\n",
-%%     "\n",
-%%     "soil-to-fertilizer map:\n",
-%%     "0 15 37\n",
-%%     "37 52 2\n",
-%%     "39 0 15\n",
-%%     "\n",
-%%     "fertilizer-to-water map:\n",
-%%     "49 53 8\n",
-%%     "0 11 42\n",
-%%     "42 0 7\n",
-%%     "57 7 4\n",
-%%     "\n",
-%%     "water-to-light map:\n",
-%%     "88 18 7\n",
-%%     "18 25 70\n",
-%%     "\n",
-%%     "light-to-temperature map:\n",
-%%     "45 77 23\n",
-%%     "81 45 19\n",
-%%     "68 64 13\n",
-%%     "\n",
-%%     "temperature-to-humidity map:\n",
-%%     "0 69 1\n",
-%%     "1 0 69\n",
-%%     "\n",
-%%     "humidity-to-location map:\n",
-%%     "60 56 37\n",
-%%     "56 93 4\n">>.
-
-%% example_test() ->
-%%    ?assertEqual({35, 46}, solve(example())).
-
-%% transform_test() ->
-%%   Ranges = [{50, 98, 2}, {52, 50, 48}],
-%%   ?assertEqual(81, transform(79, Ranges)),
-%%   ?assertEqual(14, transform(14, Ranges)),
-%%   ?assertEqual(57, transform(55, Ranges)),
-%%   ?assertEqual(13, transform(13, Ranges)).
-
-%%solve_test() ->
-%%  ?assertEqual({282277027, 11554135}, ?MODULE:solve()).
-
--endif.

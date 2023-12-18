@@ -1,12 +1,8 @@
 -module(day07).
 
--export([ solve/0
-        ]).
+-export([solve/1]).
 
 -include_lib("eunit/include/eunit.hrl").
-
-solve() ->
-  solve(input:get(7)).
 
 solve(Bin) ->
   Lines = binary:split(Bin, <<"\n">>, [global]),
@@ -96,10 +92,3 @@ classify_hand_with_jokers([A, B, C, D, E]) ->
                   Type = classify_hand(JokerHand),
                   ?IF(Type > Best, Type, Best)
               end, 0, ExpandedHands).
-
--ifdef(TEST).
-
-solve_test() ->
-  ?assertEqual({248836197,251195607}, ?MODULE:solve()).
-
--endif.

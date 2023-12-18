@@ -1,11 +1,8 @@
 -module(day02).
 
--export([solve/0]).
+-export([solve/1]).
 
 -include_lib("eunit/include/eunit.hrl").
-
-solve() ->
-  solve(input:get(2)).
 
 solve(Bin) ->
   lists:foldl(
@@ -32,10 +29,3 @@ solve(Bin) ->
             end, {list_to_integer(Game), {0, 0, 0}}, Draws),
         {GameId + P1, R * G * B + P2}
     end, {0, 0}, binary:split(Bin, <<"\n">>, [global])).
-
--ifdef(TEST).
-
-solve_test() ->
-  ?assertEqual({2061,72596}, ?MODULE:solve()).
-
--endif.
