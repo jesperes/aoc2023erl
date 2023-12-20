@@ -4,19 +4,12 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-%% It is surprisingly difficult to figure out the OTP version.
-otp_version() ->
-  {ok, Version} =
-    file:read_file(filename:join([code:root_dir(), "releases",
-                                  erlang:system_info(otp_release), "OTP_VERSION"])),
-  string:trim(binary_to_list(Version)).
 
 module(Day) ->
   binary_to_atom(iolist_to_binary(io_lib:format("day~2..0w", [Day]))).
 main(_) ->
   io:setopts([{encoding, unicode}]),
   {ok, _} = application:ensure_all_started([inets, ssl]),
-  io:format("Erlang version: ~s~n", [otp_version()]),
   {_, _, Today} = erlang:date(),
   lists:foreach(
     fun(D) when D > Today ->
