@@ -17,8 +17,6 @@ main(Args) ->
   io:setopts([{encoding, unicode}]),
   {ok, {Options, _}} = getopt:parse(options(), Args),
 
-  %% io:format("~p~n", [Options]),
-
   case proplists:get_value(help, Options) of
     true ->
       getopt:usage(options(), escript:script_name());
@@ -28,7 +26,7 @@ main(Args) ->
 
 do_main(Options) ->
   Days = case proplists:lookup_all(day, Options) of
-           List when is_list(List) ->
+           [_|_] = List when is_list(List) ->
              {_, DayNums} = lists:unzip(List),
              DayNums;
            _ ->
@@ -41,32 +39,37 @@ do_main(Options) ->
 
   case proplists:get_value(benchmark, Options) of
     true ->
-      io:format("Benchmarking solutions for days: ~p~n", [Days0]);
+      io:format("Benchmarking solutions...~n", []);
     _ ->
-      io:format("Running solutions for days: ~p~n", [Days0])
+      io:format("Running solutions...~n", [])
   end,
 
-  lists:foreach(
-    fun(D) ->
-        Mod = module(D),
-        try
-          {ok, Input} = input:get(D),
-          Expected = input:solution(D),
-          {Time, Solution} = run(Mod, Input, Options),
+  Header = ["Day", "Time", "Solution"],
+  Rows =
+    lists:map(
+      fun(D) ->
+          Mod = module(D),
+          try
+            {ok, Input} = input:get(D),
+            Expected = input:solution(D),
+            {Time, Solution} = run(Mod, Input, Options),
 
-          case Expected == Solution of
-            true ->
-              io:format("~-10s~10w μs   ~tc ~0p~n", [Mod, Time, 16#2713, Solution]);
-            false ->
-              io:format("~-10s~10w μs   ~tc ~0p (expected ~0p)~n", [Mod, Time, 16#2717, Solution, Expected])
+
+            case Expected == Solution of
+              true ->
+                [Mod, Time, Solution];
+              false ->
+                [Mod, Time, "-- incorrect --"]
+            end
+          catch
+            _:undef ->
+              [Mod, "Not impl"];
+            Class:Reason:_St ->
+              [Mod, "", {Class, Reason}]
           end
-        catch
-          _:undef ->
-            io:format("~-10s not implemented~n", [Mod]);
-          _Class:Reason ->
-            io:format("~-10s                ~tc EXCEPTION: ~0p~n", [Mod, 16#2717, Reason])
-        end
-    end, Days0).
+      end, Days0),
+
+  io:format("~s~n", [table:format([Header] ++ Rows)]).
 
 run(Module, Input, Options) ->
   case proplists:get_value(benchmark, Options, false) of

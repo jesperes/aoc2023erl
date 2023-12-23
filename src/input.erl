@@ -47,8 +47,12 @@ solution(Day) ->
   case puzzle_descr(Day) of
     {ok, Html} ->
       RE = "Your puzzle answer was <code>([^<]+)</code>",
-      {match, [[P1], [P2]]} = re:run(Html, RE, [global, {capture, all_but_first, binary}]),
-      {convert_to_binary(P1), convert_to_binary(P2)};
+      case re:run(Html, RE, [global, {capture, all_but_first, binary}]) of
+        {match, [[P1], [P2]]} ->
+          {convert_to_binary(P1), convert_to_binary(P2)};
+        _ ->
+          {undefined, undefined}
+      end;
     Error ->
       Error
   end.

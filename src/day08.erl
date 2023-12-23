@@ -23,7 +23,6 @@ solve(Bin) ->
   {solve_p1(Instrs, Rules),
    solve_p2(Instrs, Rules)}.
 
-
 solve_p1(Instrs, Rules) ->
   solve_p1(<<"AAA">>, Instrs, Instrs, Rules, 0).
 
@@ -38,8 +37,38 @@ solve_p1(Current, <<$R, Rest/binary>>, Instrs, Rules, Steps) ->
   {_, R} = maps:get(Current, Rules),
   solve_p1(R, Rest, Instrs, Rules, Steps + 1).
 
+%% Part 2
+solve_p2(Instrs, Rules) ->
+  Starts =
+    lists:filter(
+      fun(<<_, _, $A>>) -> true;
+         (_) -> false
+      end, maps:keys(Rules)),
 
-solve_p2(_Instrs, Rules) ->
-  lists:filter(fun(<<_, _, $A>>) -> true;
-                  (_) -> false
-               end, maps:keys(Rules)).
+  Cycles =
+    lists:map(fun(Start) ->
+                  solve_one_p2(Start, Instrs, Rules)
+              end, Starts),
+
+  lists:foldl(fun lcm/2, 1, Cycles).
+
+solve_one_p2(Start, Instrs, Rules) ->
+  solve_one_p2(Start, Instrs, Instrs, Rules, 0).
+
+solve_one_p2(<<_, _, $Z>>, _, _, _, Steps) ->
+  Steps;
+solve_one_p2(Current, <<>>, Instrs, Rules, Steps) ->
+  solve_one_p2(Current, Instrs, Instrs, Rules, Steps);
+solve_one_p2(Current, <<$L, Rest/binary>>, Instrs, Rules, Steps) ->
+  {L, _} = maps:get(Current, Rules),
+  solve_one_p2(L, Rest, Instrs, Rules, Steps + 1);
+solve_one_p2(Current, <<$R, Rest/binary>>, Instrs, Rules, Steps) ->
+  {_, R} = maps:get(Current, Rules),
+  solve_one_p2(R, Rest, Instrs, Rules, Steps + 1).
+
+gcd(A,B) when A == 0; B == 0 -> 0;
+gcd(A,B) when A == B -> A;
+gcd(A,B) when A > B -> gcd(A-B, B);
+gcd(A,B) -> gcd(A, B-A).
+
+lcm(A,B) -> (A*B) div gcd(A, B).
