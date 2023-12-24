@@ -23,6 +23,33 @@
 
 -define(HORIZ_SPACING, 1).
 
+-type cell() :: [ term()
+                | {term(), attribute()}
+                | {term(), [attribute()]}
+                | {fmt, Term :: any()}
+                ].
+
+-type attribute() :: {unit,
+                      From :: erlang:time_unit(),
+                      DisplayAs :: erlang:time_unit()}
+                   | {unit, erlang:time_unit()}
+                   | {color, color()}.
+
+-type color() :: red
+               | green
+               | yellow. %% etc
+
+-type row() :: [cell()].
+-type table() :: [row()].
+
+-export_type([ cell/0
+             , attribute/0
+             , color/0
+             , row/0
+             , table/0
+             ]).
+
+-spec format(Table :: table()) -> iodata().
 format(Rows) ->
   format(Rows, []).
 
@@ -103,7 +130,7 @@ bottom_border(ColWidths) ->
     HorizPad ++
 
     lists:join(
-      [HorizPad, ?HORIZONTAL_DOWN, HorizPad],
+      [HorizPad, ?HORIZONTAL_UP, HorizPad],
       lists:map(fun(Width) ->
                     lists:duplicate(Width, ?HORIZONTAL)
                 end, ColWidths)) ++
@@ -119,13 +146,16 @@ pad_to_length(L, _Pad, N) when length(L) == N ->
 pad_to_length(L, Pad, N) when length(L) < N ->
   L ++ lists:duplicate(N - length(L), Pad).
 
-
+-spec format_cell(Cell :: cell()) -> iodata().
+format_cell(Text) when is_atom(Text) ->
+  atom_to_list(Text);
 format_cell(Text) when is_list(Text) ->
   Text;
 format_cell(Bin) when is_binary(Bin) ->
   binary_to_list(Bin);
 format_cell(Other) ->
-  lists:flatten(io_lib:format("~0p", [Other])).
+  fmt("~0tp", [Other]).
+
 
 normalize_rows(Rows) ->
   NumCols = lists:max(lists:map(fun erlang:length/1, Rows)),
@@ -146,6 +176,9 @@ normalize_rows(Rows) ->
      end, lists:seq(1, NumCols)),
    PaddedRows}.
 
+
+fmt(Fmt, Args) ->
+  lists:flatten(io_lib:format(Fmt, Args)).
 
 -ifdef(TEST).
 

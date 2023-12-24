@@ -46,7 +46,7 @@ do_main(Options) ->
 
   Header = ["Day", "Time", "Solution"],
   Rows =
-    lists:map(
+    lists:filtermap(
       fun(D) ->
           Mod = module(D),
           try
@@ -54,22 +54,22 @@ do_main(Options) ->
             Expected = input:solution(D),
             {Time, Solution} = run(Mod, Input, Options),
 
-
             case Expected == Solution of
               true ->
-                [Mod, Time, Solution];
+                {true, [Mod, Time, Solution]};
               false ->
-                [Mod, Time, "-- incorrect --"]
+                {true, [Mod, Time, "-- incorrect --"]}
             end
           catch
             _:undef ->
-              [Mod, "Not impl"];
+              false;
             Class:Reason:_St ->
-              [Mod, "", {Class, Reason}]
+              {true, [Mod, "", {Class, Reason}]}
           end
       end, Days0),
 
-  io:format("~s~n", [table:format([Header] ++ Rows)]).
+  Table = [Header|Rows],
+  io:format("~ts~n", [table:format(Table)]).
 
 run(Module, Input, Options) ->
   case proplists:get_value(benchmark, Options, false) of
