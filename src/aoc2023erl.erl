@@ -54,11 +54,13 @@ do_main(Options) ->
             Expected = input:solution(D),
             {Time, Solution} = run(Mod, Input, Options),
 
+            TimeFmt = lists:flatten(io_lib:format("~w ~tcs", [Time, 16#b5])),
+
             case Expected == Solution of
               true ->
-                {true, [Mod, Time, Solution]};
+                {true, [Mod, TimeFmt, Solution]};
               false ->
-                {true, [Mod, Time, "-- incorrect --"]}
+                {true, [Mod, TimeFmt, "-- incorrect --"]}
             end
           catch
             _:undef ->
