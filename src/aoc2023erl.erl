@@ -60,10 +60,12 @@ do_main(Options) ->
               true ->
                 {true, [Mod, TimeFmt, Solution]};
               false ->
+                io:format("Expected ~p, got ~p~n", [Solution, Expected]),
                 {true, [Mod, TimeFmt, "-- incorrect --"]}
             end
           catch
-            _:undef ->
+            _:undef:St ->
+              io:format("Undef: ~p: ~p~n", [Mod, St]),
               false;
             Class:Reason:St ->
               io:format("~p~n", [St]),
