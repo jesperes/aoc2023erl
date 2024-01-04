@@ -34,8 +34,8 @@ do_main(Options) ->
          end,
 
   {ok, _} = application:ensure_all_started([inets, ssl]),
-  {_, _, Today} = erlang:date(),
-  Days0 = lists:filter(fun(D) -> D =< Today end, Days),
+  % {_, _, Today} = erlang:date(),
+  % Days0 = lists:filter(fun(D) -> D =< Today end, Days),
 
   case proplists:get_value(benchmark, Options) of
     true ->
@@ -65,10 +65,11 @@ do_main(Options) ->
           catch
             _:undef ->
               false;
-            Class:Reason:_St ->
+            Class:Reason:St ->
+              io:format("~p~n", [St]),
               {true, [Mod, "", {Class, Reason}]}
           end
-      end, Days0),
+      end, Days),
 
   Table = [Header|Rows],
   io:format("~ts~n", [table:format(Table)]).

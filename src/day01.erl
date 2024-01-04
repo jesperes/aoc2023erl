@@ -6,14 +6,14 @@
 
 solve(Bin) ->
   Lines = binary:split(Bin, <<"\n">>, [global]),
-  {solve0(part1, fun get_first_last/4, Lines),
-   solve0(part2, fun get_first_last/4, Lines)}.
+  {solve0(part1, Lines),
+   solve0(part2, Lines)}.
 
-solve0(Part, GetFirstLastFun, Lines) ->
+solve0(Part, Lines) ->
   lists:foldl(
     fun(<<>>, Acc) -> Acc;
        (Line, Acc) ->
-        Acc + GetFirstLastFun(Part, Line, undefined, undefined)
+        Acc + get_first_last(Part, Line, undefined, undefined)
     end, 0, Lines).
 
 get_first_last(_Part, <<>>, First, Last) ->

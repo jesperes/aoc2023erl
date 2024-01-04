@@ -2,14 +2,15 @@
 
 -export([solve/1]).
 
+-define(is_digit(D), (D >= $0 andalso D =< $9)).
+
 solve(Bin) ->
   {W, _} = binary:match(Bin, <<"\n">>),
   WNL = W + 1,
-  {match, Matches} = re:run(Bin, "(\\d+)", [global, {capture, all_but_first}]),
   Map = lists:foldl(
-          fun([PosLen], Acc) ->
+          fun(PosLen, Acc) ->
               find_adj_symbols(PosLen, WNL, Bin, Acc)
-          end, #{}, Matches),
+          end, #{}, find_numbers(Bin)),
 
   %% `Map' is a map from symbols (their index) to the set of numbers
   %% they are adjacent to.
@@ -31,6 +32,23 @@ solve(Bin) ->
          end, 0, Map),
 
   {P1, P2}.
+
+%% Find the location of all the numbers. This is roughly equivalent to
+%% re:run(Bin, "(\\d+)", [global]), but faster.
+find_numbers(Bin) ->
+  find_numbers(Bin, 0, [], false, 0, 0, 0).
+
+find_numbers(<<>>, _, Numbers, _, _, _, _) ->
+  lists:reverse(Numbers);
+find_numbers(<<D, Rest/binary>>, Index, Numbers, true, Curr, NumLen, NumStart) when ?is_digit(D) ->
+  find_numbers(Rest, Index + 1, Numbers,
+               true, Curr * 10 + (D - $0), NumLen + 1, NumStart);
+find_numbers(<<D, Rest/binary>>, Index, Numbers, false, _Curr, _NumLen, _NumStart) when ?is_digit(D) ->
+  find_numbers(Rest, Index + 1, Numbers, true, D - $0, 1, Index);
+find_numbers(<<_, Rest/binary>>, Index, Numbers, true, _Curr, NumLen, NumStart) ->
+  find_numbers(Rest, Index + 1, [{NumStart, NumLen}|Numbers], false, 0, 0, 0);
+find_numbers(<<_, Rest/binary>>, Index, Numbers, false, CurrNum, NumLen, NumStart) ->
+  find_numbers(Rest, Index + 1, Numbers, false, CurrNum, NumLen, NumStart).
 
 find_adj_symbols({Start, Len} = PosLen, W, Bin, Map) ->
   N = binary_to_integer(binary:part(Bin, PosLen)),
